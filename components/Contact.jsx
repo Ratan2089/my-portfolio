@@ -1,22 +1,30 @@
 'use client';
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import emailjs from "@emailjs/browser";
 import { PERSONAL_INFO, SOCIAL_LINKS } from "@/lib/data/constants";
-import { Mail, Phone, MapPin, Send, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Loader2, CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
+const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
 export default function Contact() {
+  const formRef = useRef(null);
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: ""
   });
-  
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   const validate = () => {
     const tempErrors = {};
@@ -28,7 +36,7 @@ export default function Contact() {
     }
     if (!formData.subject.trim()) tempErrors.subject = "Subject is required";
     if (!formData.message.trim()) tempErrors.message = "Message cannot be empty";
-    
+
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
   };
@@ -42,24 +50,30 @@ export default function Contact() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
 
+    setSendError("");
     setLoading(true);
-    // Simulate API request
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        message: ""
+
+    try {
+      await emailjs.sendForm(SERVICE_ID, TEMPLATE_ID, formRef.current, {
+        publicKey: PUBLIC_KEY,
       });
-      // Hide success toast after 4s
+
+      setSuccess(true);
+      setFormData({ name: "", email: "", subject: "", message: "" });
+      // Hide success toast after 4 s
       setTimeout(() => setSuccess(false), 4000);
-    }, 1500);
+    } catch (err) {
+      console.error("EmailJS error:", err);
+      setSendError("Failed to send message. Please try again later.");
+      // Hide error toast after 5 s
+      setTimeout(() => setSendError(""), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -72,7 +86,7 @@ export default function Contact() {
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-6 relative z-10">
-        
+
         {/* Section Heading */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-base font-semibold tracking-wider text-blue-600 dark:text-blue-400 uppercase">
@@ -85,7 +99,7 @@ export default function Contact() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-5xl mx-auto">
-          
+
           {/* Left Column - Contact Info */}
           <div className="lg:col-span-5 space-y-8 flex flex-col justify-between">
             <div className="space-y-6">
@@ -95,7 +109,7 @@ export default function Contact() {
               <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
                 I am interested in full-stack, frontend, and backend engineering roles. If you have an application to build or want to connect, feel free to drop a message.
               </p>
-              
+
               {/* Details List */}
               <div className="space-y-4 pt-4">
                 {/* Email */}
@@ -168,8 +182,8 @@ export default function Contact() {
           {/* Right Column - Contact Form */}
           <div className="lg:col-span-7">
             <div className="p-6 sm:p-8 rounded-3xl border border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/60 shadow-xl shadow-zinc-100/50 dark:shadow-none relative">
-              <form onSubmit={handleSubmit} className="space-y-5">
-                
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
+
                 {/* Name */}
                 <div className="space-y-1.5">
                   <label htmlFor="name" className="text-xs font-bold text-zinc-700 dark:text-zinc-300 uppercase tracking-wider">
@@ -181,11 +195,10 @@ export default function Contact() {
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${
-                      errors.name
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
-                    }`}
+                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${errors.name
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
+                      }`}
                     placeholder="John Doe"
                   />
                   {errors.name && (
@@ -207,11 +220,10 @@ export default function Contact() {
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${
-                      errors.email
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
-                    }`}
+                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${errors.email
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
+                      }`}
                     placeholder="johndoe@example.com"
                   />
                   {errors.email && (
@@ -233,11 +245,10 @@ export default function Contact() {
                     name="subject"
                     value={formData.subject}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${
-                      errors.subject
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
-                    }`}
+                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${errors.subject
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
+                      }`}
                     placeholder="Project Inquiry / Job opening"
                   />
                   {errors.subject && (
@@ -259,11 +270,10 @@ export default function Contact() {
                     rows={4}
                     value={formData.message}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none ${
-                      errors.message
-                        ? "border-red-400 focus:border-red-500"
-                        : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
-                    }`}
+                    className={`w-full px-4 py-3 rounded-xl border bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none ${errors.message
+                      ? "border-red-400 focus:border-red-500"
+                      : "border-zinc-200 dark:border-zinc-800 focus:border-blue-500 dark:focus:border-blue-400"
+                      }`}
                     placeholder="Hello Kumar, I'd like to collaborate..."
                   />
                   {errors.message && (
@@ -295,14 +305,15 @@ export default function Contact() {
               </form>
             </div>
           </div>
-          
+
         </div>
       </div>
 
-      {/* Floating Success Toast Alert Notification */}
+      {/* Floating Toast Notifications */}
       <AnimatePresence>
         {success && (
           <motion.div
+            key="success-toast"
             initial={{ opacity: 0, y: 50, x: "-50%" }}
             animate={{ opacity: 1, y: 0, x: "-50%" }}
             exit={{ opacity: 0, y: 20, x: "-50%" }}
@@ -310,6 +321,18 @@ export default function Contact() {
           >
             <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
             <span className="text-sm font-bold">Message sent successfully! Thank you.</span>
+          </motion.div>
+        )}
+        {sendError && (
+          <motion.div
+            key="error-toast"
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 20, x: "-50%" }}
+            className="fixed bottom-6 left-1/2 z-50 px-5 py-3 rounded-2xl border border-red-200 dark:border-red-950 bg-red-50 dark:bg-red-950/90 text-red-800 dark:text-red-200 shadow-xl shadow-red-500/10 flex items-center space-x-2 backdrop-blur-md"
+          >
+            <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+            <span className="text-sm font-bold">{sendError}</span>
           </motion.div>
         )}
       </AnimatePresence>
