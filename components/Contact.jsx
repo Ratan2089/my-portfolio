@@ -25,6 +25,13 @@ export default function Contact() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [sendError, setSendError] = useState("");
+  const [showDebug, setShowDebug] = useState(false);
+
+  const envStatus = [
+    { label: "SERVICE_ID", value: SERVICE_ID },
+    { label: "TEMPLATE_ID", value: TEMPLATE_ID },
+    { label: "PUBLIC_KEY", value: PUBLIC_KEY },
+  ];
 
   const validate = () => {
     const tempErrors = {};
@@ -51,6 +58,8 @@ export default function Contact() {
   };
 
   const handleSubmit = async (e) => {
+    console.log("Clicked button");
+
     e.preventDefault();
     if (!validate()) return;
 
@@ -63,6 +72,8 @@ export default function Contact() {
       });
 
       setSuccess(true);
+      console.log("Mail sent");
+
       setFormData({ name: "", email: "", subject: "", message: "" });
       // Hide success toast after 4 s
       setTimeout(() => setSuccess(false), 4000);
@@ -83,6 +94,46 @@ export default function Contact() {
     >
       {/* Background glow orb */}
       <div className="absolute right-10 top-10 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      {/* ── ENV Debug Panel ── */}
+      <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2">
+        <button
+          onClick={() => setShowDebug((p) => !p)}
+          className="px-3 py-1.5 text-xs font-mono font-bold rounded-lg bg-zinc-800 dark:bg-zinc-700 text-zinc-200 border border-zinc-600 hover:bg-zinc-700 dark:hover:bg-zinc-600 shadow-lg transition-colors"
+        >
+          {showDebug ? "✕ Hide Debug" : "🔍 Debug ENV"}
+        </button>
+
+        <AnimatePresence>
+          {showDebug && (
+            <motion.div
+              key="debug-panel"
+              initial={{ opacity: 0, y: 8, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.97 }}
+              className="p-4 rounded-2xl border border-zinc-700 bg-zinc-900/95 backdrop-blur-md shadow-2xl min-w-[240px] font-mono text-xs"
+            >
+              <p className="text-zinc-400 mb-3 font-bold uppercase tracking-widest text-[10px]">EmailJS ENV Variables</p>
+              <div className="space-y-2">
+                {envStatus.map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between gap-4">
+                    <span className="text-zinc-400">{label}</span>
+                    {value ? (
+                      <span className="px-2 py-0.5 rounded-md bg-green-900/60 text-green-400 border border-green-800 text-[10px] font-bold">
+                        ✓ SET ({value.slice(0, 6)}…)
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-md bg-red-900/60 text-red-400 border border-red-800 text-[10px] font-bold">
+                        ✗ MISSING
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-6 relative z-10">
