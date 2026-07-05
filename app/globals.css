@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Enable class-based dark mode for Tailwind v4.
+   ThemeProvider adds/removes the .dark class on <html>. */
+@variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html {
     scroll-behavior: smooth;
