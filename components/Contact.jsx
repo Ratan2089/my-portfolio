@@ -58,7 +58,6 @@ export default function Contact() {
   };
 
   const handleSubmit = async (e) => {
-    console.log("Clicked button");
 
     e.preventDefault();
     if (!validate()) return;
@@ -96,7 +95,7 @@ export default function Contact() {
       <div className="absolute right-10 top-10 w-96 h-96 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* ── ENV Debug Panel ── */}
-      <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2">
+      {/* <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-2">
         <button
           onClick={() => setShowDebug((p) => !p)}
           className="px-3 py-1.5 text-xs font-mono font-bold rounded-lg bg-zinc-800 dark:bg-zinc-700 text-zinc-200 border border-zinc-600 hover:bg-zinc-700 dark:hover:bg-zinc-600 shadow-lg transition-colors"
@@ -133,7 +132,7 @@ export default function Contact() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div> */}
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-6 relative z-10">
